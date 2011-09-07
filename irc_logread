@@ -59,7 +59,6 @@ while (my $l = <F>){
 	}
 }
 
-# exec $ENV{'PAGER'}, $filename;
 exec '/usr/bin/less', '-r', $filename;
 
 sub colorchk {
