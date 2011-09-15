@@ -1,0 +1,95 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use Term::ANSIColor;
+use File::Temp "tempfile";
+use Text::Wrap qw(wrap);
+
+my $pjs = ''; # do we want to see parts and joins?  
+
+if ($ARGV[0] eq '-pjs'){ $pjs = shift @ARGV; }
+
+	#fit my terminal
+$Text::Wrap::columns = 80; 
+	# don't destroy urls
+$Text::Wrap::huge = 'overflow'; 
+my @colors= qw/red green yellow blue magenta cyan/;
+	# holds names to colors
+my %colormap;
+my ($fh, $filename) = tempfile();
+
+
+	# open file or read stdin
+if ( $ARGV[0] ){
+	open F, '<', $ARGV[0] or die "couldn't open file: $!";
+	} 
+	else { *F = *main::STDIN; } 
+
+while (<F>){
+#s/\0xe2/'/g; s/\0xe2\0xa6/.../g; s/\Oxe2\0x7e/--/g; # fucking computers
+	my ($time, $line, $name, $clr, $hail); 
+		# irssi control notices
+	if (/^---/) { 
+			prnt ($fh,color( "reset bold yellow" ),$_ );
+			next;
+			} 
+		# strip off timestamp
+	($time, $line) = ( $_ =~ /^(\d\d:\d\d)(.*)$/ );
+
+		# joins and parts
+	if ( $line =~ s/^\s-!-\s// ){ 
+		if ( $pjs ) { 
+			prnt ($fh, color( "reset yellow" ), "$line\n\n");
+			}
+		next;
+		} 
+	elsif ($line =~ s/^\s\s\*\s([^\s]+)\s//){ 
+		$clr = colorchk ($1); 
+		prnt ($fh, color( "reset bold $clr" ),"*$1*"); 
+		} 
+	elsif ($line =~ s/^\s<\s([^>]+)>\s//){ 
+		$clr = colorchk ($1); 
+		prnt ($fh, color( "reset bold $clr" ), "$1");
+		} 
+	if ( $line =~ s/^([^\s]+)([:,])// ){
+		if (exists $colormap{$1} ){
+			$clr = colorchk ($1); 
+				# highlight when addressing directly
+			$hail = color("reset bold $clr") . $1 ;
+			}
+		else {  $hail = $1; # put it back 
+			}
+		$line = $hail . color("reset"). $2 . $line;
+		}
+	my $lines = wrap("\t", "\t", $line);
+		# we printed the name in color already, so....  
+	prnt ($fh, color("reset"), " - (\@$time)\n"); 
+	prnt ($fh, color("reset"),"$lines\n");
+}
+
+# exec $ENV{'PAGER'}, $filename;
+# for the mac/bsd version...
+exec '/usr/bin/less', '-r -f', $filename;
+
+sub colorchk {
+	my $per = shift;
+	if (exists $colormap{$per} ) {
+		return $colormap{$per};
+	}
+	else {
+		my $color = shift @colors;
+		push @colors, $color;
+		$colormap{$per}=$color;
+		return $color;
+	}
+}
+
+sub prnt {
+	my ($fh,$cntrl,$txt) = @_;
+	print $fh $cntrl, $txt, color( "reset");
+}
+
+
+# vim:noai set ts=4 et sw=4 sts=4 ft=perl 
+

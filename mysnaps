@@ -1,0 +1,20 @@
+#!/bin/sh
+
+action=$1
+shift
+snapshot=$1
+shift 
+servers=($@)
+
+
+if [ -z "$1" ] 
+then echo 'give an action [revertToSnapshot|deleteSnapshot|snapshot], snapshotName [pe|git] and a list of servers
+cent55_386_ks rhel_6_64 
+Ubuntu_10.04.1_64 Ubuntu_1004_i386 
+'
+fi
+
+for server in ${servers[@]}
+do 
+vmrun ${action} /Users/Higgins/Documents/Virtual_Machines.localized/${server}.vmwarevm/${server}.vmx ${snapshot}
+done

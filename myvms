@@ -1,0 +1,27 @@
+#!/bin/sh
+
+action=$1
+shift
+servers=($@)
+
+
+if [ -z "$1" ] 
+then echo 'give an action [start|stop] and a list of servers
+cent55_386_ks rhel_6_64 
+Ubuntu_10.04.1_64 Ubuntu_1004_i386 
+vmrun list'
+fi
+
+if [ "${action}" == "start" ]
+then append="nogui"
+fi
+
+for server in ${servers[@]}
+do 
+vmrun ${action} /Users/Higgins/Documents/Virtual_Machines.localized/${server}.vmwarevm/${server}.vmx ${append}
+done
+
+if [ "${action}" == "stop" ]
+then find ~/Documents/Virtual_Machines.localized/ -iname '*lck*' -exec rm -fr '{}' \; >/dev/null 2>&1 
+fi
+
