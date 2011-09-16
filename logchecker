@@ -1,0 +1,6 @@
+#!/bin/sh
+
+find /home/hudson/workspace/. -name 'latest' -exec grep -rl $1 '{}' \; | while read file 
+do echo "\n${file}"
+grep -n1 "$1" "${file}" 
+done
